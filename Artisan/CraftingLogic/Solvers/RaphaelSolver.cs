@@ -53,6 +53,10 @@ namespace Artisan.CraftingLogic.Solvers
     internal static class RaphaelCache
     {
         internal static readonly ConcurrentDictionary<RaphaelOptions, RaphaelTaskInfo> Tasks = [];
+
+        // keys that failed to solve, so auto-generate doesn't respawn the CLI every frame; not persisted
+        internal static readonly ConcurrentDictionary<RaphaelOptions, byte> FailedSolves = [];
+
         [NonSerialized]
         public static List<RaphaelSolutionConfig> TempConfigs = [];
 
@@ -79,6 +83,9 @@ namespace Artisan.CraftingLogic.Solvers
 
             // nuke the old macro if one exists
             CurrentCache.TryRemove(key, out _);
+
+            // an explicit build request is always a retry
+            FailedSolves.TryRemove(key, out _);
 
             var manipulation = config.HasManipulation ? "--manipulation" : "";
             var itemText = $"--custom-recipe {craft.LevelTable.RowId} {craft.CraftProgress} {(craft.CraftCollectible && !craft.IsCosmic ? craft.CraftQualityMin3 : craft.CraftQualityMax)} {craft.CraftDurability} {(craft.CraftExpert ? "1" : "0")} --stellar-steady-hand {Math.Min(craft.CurrentSteadyHandCharges, P.Config.RaphaelSolverConfig.MaxStellarHand)}";
@@ -219,6 +226,10 @@ namespace Artisan.CraftingLogic.Solvers
                     {
                         AutoSwitch(craft, key);
                         P.Config.Save();
+                    }
+                    else
+                    {
+                        FailedSolves[key] = 0;
                     }
                     Tasks.TryRemove(key, out _);
                 }
@@ -405,7 +416,7 @@ namespace Artisan.CraftingLogic.Solvers
                 {
                     if (solverIsRaph)
                         ImGuiEx.TextCentered(ImGuiColors.DalamudRed, "No Raphael solution generated");
-                    if (P.Config.RaphaelSolverConfig.AutoGenerate && CraftingProcessor.GetAvailableSolversForRecipe(craft, true).Any() && (!craft.CraftExpert || (craft.CraftExpert && P.Config.RaphaelSolverConfig.GenerateOnExperts)))
+                    if (P.Config.RaphaelSolverConfig.AutoGenerate && !FailedSolves.ContainsKey(opts) && CraftingProcessor.GetAvailableSolversForRecipe(craft, true).Any() && (!craft.CraftExpert || (craft.CraftExpert && P.Config.RaphaelSolverConfig.GenerateOnExperts)))
                     {
                         Build(craft, curConfig);
                     }
@@ -878,6 +889,10 @@ namespace Artisan.CraftingLogic.Solvers
 
                 ImGui.Unindent();
                 ImGui.Dummy(new Vector2(0, 10f));
+
+                // timeout and thread count aren't part of the cache key, so a settings change can turn a failed solve into a solvable one
+                if (changed)
+                    RaphaelCache.FailedSolves.Clear();
 
                 return changed;
             }
