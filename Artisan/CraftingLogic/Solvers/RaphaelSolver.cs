@@ -81,11 +81,12 @@ namespace Artisan.CraftingLogic.Solvers
             CurrentCache.TryRemove(key, out _);
 
             var manipulation = config.HasManipulation ? "--manipulation" : "";
-            var itemText = $"--custom-recipe {craft.LevelTable.RowId} {craft.CraftProgress} {(craft.CraftCollectible && !craft.IsCosmic ? craft.CraftQualityMin3 : craft.CraftQualityMax)} {craft.CraftDurability} {(craft.CraftExpert ? "1" : "0")} --stellar-steady-hand {Math.Min(craft.CurrentSteadyHandCharges, P.Config.RaphaelSolverConfig.MaxStellarHand)}";
+            var itemText = $"--custom-recipe {craft.LevelTable.RowId} {craft.CraftProgress} {craft.CraftQualityMax} {craft.CraftDurability} {(craft.CraftExpert ? "1" : "0")} --stellar-steady-hand {Math.Min(craft.CurrentSteadyHandCharges, P.Config.RaphaelSolverConfig.MaxStellarHand)}";
 
             var argsList = new List<string>
             {
-                $"--initial {craft.InitialQuality}"
+                $"--initial {craft.InitialQuality}",
+                $"--target-quality {GetTargetQuality(craft)}"
             };
 
             if (config.EnsureReliability) argsList.Add("--adversarial");
@@ -360,6 +361,18 @@ namespace Artisan.CraftingLogic.Solvers
                 UseHeartAndSoul = globalRaph.ShowSpecialistSettings && globalRaph.UseHeartAndSoul && craft.Specialist && (!checkDelins || hasDelins),
                 UseQuickInno = globalRaph.ShowSpecialistSettings && globalRaph.UseQuickInno && craft.Specialist && (!checkDelins || hasDelins),
             };
+        }
+
+        // the quality the solver is asked to reach; anything above it is wasted CP, so the thresholds below are the point at which the reward stops improving
+        public static int GetTargetQuality(CraftState craft)
+        {
+            if (craft.CraftCollectible && !craft.IsCosmic)
+                return craft.CraftQualityMin3;
+
+            if (craft.CraftRequiredQuality > 0)
+                return craft.CraftRequiredQuality;
+
+            return craft.CraftQualityMax;
         }
 
         public static bool HasSolution(CraftState craft, out Macro? raphaelSolution) => HasSolution(craft, null, out raphaelSolution);
