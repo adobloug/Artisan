@@ -191,6 +191,7 @@ namespace Artisan.CraftingLogic.Solvers
                                 StatLevel = craft.StatLevel,
                                 Progress = craft.CraftProgress,
                                 QualityMax = craft.CraftQualityMax,
+                                TargetQuality = GetTargetQuality(craft),
                                 Durability = craft.CraftDurability,
                                 IsExpert = craft.CraftExpert,
                                 InitialQuality = craft.InitialQuality,
@@ -314,6 +315,7 @@ namespace Artisan.CraftingLogic.Solvers
                 StatLevel = craft.StatLevel,
                 Progress = craft.CraftProgress,
                 QualityMax = craft.CraftQualityMax,
+                TargetQuality = GetTargetQuality(craft),
                 Durability = craft.CraftDurability,
                 IsExpert = craft.CraftExpert,
                 InitialQuality = craft.InitialQuality,
@@ -326,12 +328,12 @@ namespace Artisan.CraftingLogic.Solvers
         // this key is for identifying solutions while debugging; code should look up solutions by their RaphaelOptions
         public static string GetTextKey(CraftState craft, RaphaelSolutionConfig config)
         {
-            return $"{craft.CraftLevel}/{craft.CraftProgress}/{craft.CraftQualityMax}/{craft.CraftDurability}-{craft.StatCraftsmanship}/{craft.StatControl}/{craft.StatCP}-{(craft.CraftExpert ? "Ex" : "St")}/{craft.InitialQuality}/{(craft.Specialist ? "Sp" : "Re")}/Steady{Math.Min(craft.CurrentSteadyHandCharges, P.Config.RaphaelSolverConfig.MaxStellarHand)}-{(config.UseHeartAndSoul ? "1" : "0")}/{(config.UseQuickInno ? "1" : "0")}/{(config.HasManipulation ? "1" : "0")}/{(config.EnsureReliability ? "1" : "0")}/{(config.BackloadProgress ? "1" : "0")}";
+            return $"{craft.CraftLevel}/{craft.CraftProgress}/{craft.CraftQualityMax}/{GetTargetQuality(craft)}/{craft.CraftDurability}-{craft.StatCraftsmanship}/{craft.StatControl}/{craft.StatCP}-{(craft.CraftExpert ? "Ex" : "St")}/{craft.InitialQuality}/{(craft.Specialist ? "Sp" : "Re")}/Steady{Math.Min(craft.CurrentSteadyHandCharges, P.Config.RaphaelSolverConfig.MaxStellarHand)}-{(config.UseHeartAndSoul ? "1" : "0")}/{(config.UseQuickInno ? "1" : "0")}/{(config.HasManipulation ? "1" : "0")}/{(config.EnsureReliability ? "1" : "0")}/{(config.BackloadProgress ? "1" : "0")}";
         }
 
         public static string GetKeyForLookups(RaphaelOptions opt)
         {
-            return $"{opt.Level}/{opt.Progress}/{opt.QualityMax}/{opt.Durability}-{opt.MinCraftsmanship}/{opt.MinControl}/{opt.MinCP}-{(opt.IsExpert ? "Ex" : "St")}/{opt.InitialQuality}/{(opt.IsSpecialist ? "Sp" : "Re")}/Steady{opt.SteadyHandUses}-{(opt.SolutionConfig.UseHeartAndSoul ? "1" : "0")}/{(opt.SolutionConfig.UseQuickInno ? "1" : "0")}/{(opt.SolutionConfig.HasManipulation ? "1" : "0")}/{(opt.SolutionConfig.EnsureReliability ? "1" : "0")}/{(opt.SolutionConfig.BackloadProgress ? "1" : "0")}";
+            return $"{opt.Level}/{opt.Progress}/{opt.QualityMax}/{opt.TargetQuality}/{opt.Durability}-{opt.MinCraftsmanship}/{opt.MinControl}/{opt.MinCP}-{(opt.IsExpert ? "Ex" : "St")}/{opt.InitialQuality}/{(opt.IsSpecialist ? "Sp" : "Re")}/Steady{opt.SteadyHandUses}-{(opt.SolutionConfig.UseHeartAndSoul ? "1" : "0")}/{(opt.SolutionConfig.UseQuickInno ? "1" : "0")}/{(opt.SolutionConfig.HasManipulation ? "1" : "0")}/{(opt.SolutionConfig.EnsureReliability ? "1" : "0")}/{(opt.SolutionConfig.BackloadProgress ? "1" : "0")}";
         }
 
         public static IEnumerable<CraftState> AllValidCrafts(RaphaelOptions key)
@@ -914,6 +916,7 @@ namespace Artisan.CraftingLogic.Solvers
         public int StatLevel = 0;
         public int Progress = 0;
         public int QualityMax = 0;
+        public int TargetQuality = 0;
         public int Durability = 0;
         public bool IsExpert = false;
         public int InitialQuality = 0;
