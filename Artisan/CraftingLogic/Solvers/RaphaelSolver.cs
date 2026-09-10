@@ -368,6 +368,9 @@ namespace Artisan.CraftingLogic.Solvers
         // the quality the solver is asked to reach; anything above it is wasted CP, so the thresholds below are the point at which the reward stops improving
         public static int GetTargetQuality(CraftState craft)
         {
+            if (P.Config.RaphaelSolverConfig.TargetMaxQuality)
+                return craft.CraftQualityMax;
+
             if (craft.CraftCollectible && !craft.IsCosmic)
                 return craft.CraftQualityMin3;
 
@@ -768,6 +771,7 @@ namespace Artisan.CraftingLogic.Solvers
         public bool GenerateOnExperts = false;
         public int TimeOutMins = 1;
         public int MaxStellarHand = 2;
+        public bool TargetMaxQuality = false;
         public bool DefaultRaphSolver = false;
         public bool FallbackToSolverIfRaphaelLocked = true;
         public string FallbackSolverType = typeof(StandardSolverDefinition).FullName!;
@@ -841,6 +845,9 @@ namespace Artisan.CraftingLogic.Solvers
 
                 changed |= ImGui.Checkbox("Allow specialist actions when available", ref ShowSpecialistSettings);
                 ImGuiComponents.HelpMarker($"Enables checkboxes on the Crafting Log mini-menu that let the solver use {Skills.HeartAndSoul.NameOfAction()} and {Skills.QuickInnovation.NameOfAction()}.");
+
+                changed |= ImGui.Checkbox("Always solve for maximum quality", ref TargetMaxQuality);
+                ImGuiComponents.HelpMarker($"By default a collectable is solved to its highest collectability tier, the point where {QualityString.ToLower()} stops paying. Enable this to solve for the recipe's true maximum instead: a longer macro costing more CP, for no extra reward in game.");
 
                 changed |= P.PluginUi.ExpertSettingsUI.SliderIntWithIcons("MaxStellarHand", ref MaxStellarHand, 0, 2, "Max [s!SteadyHand] uses per craft");
                 P.PluginUi.ExpertSettingsUI.HelpMarkerWithIcons(["This setting only applies to Cosmic Exploration recipes on missions with [s!SteadyHand].", "The Raphael solver will use UP TO this many charges depending on the recipe's difficulty."]);
